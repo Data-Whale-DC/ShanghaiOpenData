@@ -38,19 +38,24 @@ toJSON(fromJSON(content(response, as = "text")), pretty = TRUE)
 
 library(geojsonsf)
 shanghai <- geojsonsf::geojson_sf(url("https://geo.datav.aliyun.com/areas_v2/bound/310000_full.json"))
-library(ggplot2)
 
-ggplot(shanghai, aes(fill = name))+
-  geom_sf()+
-  theme_classic()
+# library(ggplot2)
+# ggplot(shanghai, aes(fill = name))+
+#   geom_sf()+
+#   theme_classic()
 
+library(tmap)
+# Sys.setlocale(category="LC_ALL",locale="en_US.UTF-8")
+tm_shape(shanghai)+
+  tm_polygons(col = "name")+
+  tm_layout(frame = F, fontfamily = "Hei")
 
 # SANDBOX ===
 # https://gadm.org/download_country_v3.html
 
 # raster::getData('GADM',country="CHN",level=1)
 library(sf)
-library(tmap)
+
 level <- 1 # choose between 0 - 3
 map_url <- paste0("https://biogeo.ucdavis.edu/data/gadm3.6/Rsf/gadm36_CHN_",
                   level,"_sf.rds")
