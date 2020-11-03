@@ -1,0 +1,12 @@
+name: MapShanghai
+title: MapShanghai
+username:
+account: sifan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3053031
+bundleId: 3760505
+url: https://sifan.shinyapps.io/MapShanghai/
+when: 1603155929.54197
+asMultiple: FALSE
+asStatic: FALSE
