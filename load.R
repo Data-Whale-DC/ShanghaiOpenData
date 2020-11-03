@@ -9,19 +9,19 @@
 # -H 'content-type: application/json' \
 # -H 'cache-control: no-cache' \
 # -H 'token: 78ec6c3c64163770f827ea9e96aa962d' \
-# -d '{ 	"id":"avg_income", 	"limit":20, 	"offset":0 }'
+# -d '{ 	"id":1, 	"limit":20, 	"offset":0 }'
 
 # httr: fail, status code not 200
 library(httr)
 library(jsonlite)
 
-url <- paste0( "https://data.sh.gov.cn/interface/2273")
+url <- paste0( "https://data.sh.gov.cn/interface/2071")
 
 response <- httr::POST(
   url = url,
   content_type_json(),
   body = list(
-    id = "avg_expenses",
+    id = "1",
     limit = 20,
     offset = 0
   ),
@@ -31,20 +31,47 @@ response <- httr::POST(
 response$request
 toJSON(fromJSON(content(response, as = "text")), pretty = TRUE)
 
+# read data ====
+library(tidyverse)
+emerg <- read_csv("Data/2016全市医疗机构区域分科门急诊情况.csv", 
+                      locale = locale(encoding = "GBK"),
+                      col_names = F, 
+                      skip = 1
+) %>% 
+  mutate(X1 = ifelse(is.na(X1),"name",X1)) %>% 
+  janitor::row_to_names(row_number = 1) %>%
+  mutate(across(-name, ~as.numeric(.)))
 
+save(emerg, file = "MapShanghai/emerg.rda")
 # Map data ===
 
 # from http://datav.aliyun.com/
 
 library(geojsonsf)
 shanghai <- geojsonsf::geojson_sf(url("https://geo.datav.aliyun.com/areas_v2/bound/310000_full.json"))
+save(shanghai, file = "shanghai.rda")
 
-# library(ggplot2)
-# ggplot(shanghai, aes(fill = name))+
-#   geom_sf()+
-#   theme_classic()
+map_data <- merge(shanghai, emerg)
 
+# ggplot2 method -----
+library(ggplot2)
+library(plotly)
+
+create_map <- function(col){
+  col <- enquo(col)
+  map <- ggplot(map_data, aes(fill = !!col, text = name))+
+    geom_sf()+
+    ggthemes::theme_map()+
+    theme(text = element_text(family = "Hei"))
+  
+  ggplotly(map)
+}
+ 
+create_map(其他)
+
+# tmap method -----
 library(tmap)
+
 # Sys.setlocale(category="LC_ALL",locale="en_US.UTF-8")
 tm_shape(shanghai)+
   tm_polygons(col = "name")+
@@ -62,4 +89,7 @@ map_url <- paste0("https://biogeo.ucdavis.edu/data/gadm3.6/Rsf/gadm36_CHN_",
 
 map_china <- readRDS(url(map_url))
 save(map_china_l3, file = "map_china.rda")
+
+
+
 
