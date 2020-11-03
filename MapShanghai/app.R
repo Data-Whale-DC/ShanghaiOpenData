@@ -13,6 +13,7 @@ library(ggplot2)
 library(sf)
 library(plotly)
 library(DT)
+library(shinythemes)
 
 load("shanghai.rda")
 load("emerg.rda")
@@ -32,11 +33,26 @@ create_map <- function(col){
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+    theme = shinytheme("cerulean"),
+    
+    # app windows title
+    tags$head(
+        tags$title("上海区县地图")
+    ),
+    
+    # app first row
+    titlePanel(
+        fluidRow(
+            column(5, img(height = 100, src = "soda-datawhale.png")),
+            column(7, h4("placeholder text to introduce the app, its relationship with the r package, etc.")),
+        ),
+        
+    ),
+    
+    # app second row
+    h2("上海区县地图"),
 
-    # Application title
-    titlePanel("上海区县地图"),
-
-    # Sidebar with a slider input for number of bins 
+    # Sidebar
     sidebarLayout(
         sidebarPanel(
             selectizeInput("dataset", "选择数据表", choices = "TBD"),
@@ -45,7 +61,7 @@ ui <- fluidPage(
             DT::dataTableOutput("data")
         ),
 
-        # Show a plot of the generated distribution
+        # Main panel viz
         mainPanel(
            plotlyOutput("map")
         )
@@ -61,3 +77,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
