@@ -44,14 +44,21 @@ emerg <- read_csv("Data/2016全市医疗机构区域分科门急诊情况.csv",
 
 save(emerg, file = "MapShanghai/emerg.rda")
 # Map data ===
-
 # from http://datav.aliyun.com/
 
 library(geojsonsf)
-shanghai <- geojsonsf::geojson_sf(url("https://geo.datav.aliyun.com/areas_v2/bound/310000_full.json"))
-save(shanghai, file = "shanghai.rda")
+# shanghai <- geojsonsf::geojson_sf(url("https://geo.datav.aliyun.com/areas_v2/bound/310000_full.json"))
+# save(shanghai, file = "shanghai.rda")
 
-map_data <- merge(shanghai, emerg)
+load("MapShanghai/data.rda")
+load("MapShanghai/shanghai.rda")
+
+data <- cleaned$`表2.2 各区土地面积、常住人口及人口密度（2017）` %>% 
+  rename(name = 地区) %>% 
+  mutate(across(-name, as.numeric))
+
+map_data <- shanghai %>% 
+  left_join(data, by= "name")
 
 # ggplot2 method -----
 library(ggplot2)
@@ -67,7 +74,7 @@ create_map <- function(col){
   ggplotly(map)
 }
  
-create_map(其他)
+create_map(`人口密度（人/平方公里）`)
 
 # tmap method -----
 library(tmap)

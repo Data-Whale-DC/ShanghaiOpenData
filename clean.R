@@ -22,15 +22,27 @@ clean_stat <- function(df){
   df[-(1:n), ]
 }
 
-# save data for manual clean
-
 cleaned <- data %>% 
   map(clean_stat)
 
+# dataset names
 names(cleaned) <- map_chr(1:length(data),~ names(data[[.x]])[[1]])
 
+# Manual clean
 cleaned %>% 
   openxlsx::write.xlsx(file = "Data/census.xlsx")
 
+library(readxl)
+
+list <- excel_sheets("Data/census.xlsx")
+cleaned <- list %>% 
+  map(read_xlsx, path = "Data/census.xlsx")
+names(cleaned) <- list
+
+cleaned <- cleaned %>% 
+  map(~mutate(.x, across(c(-地区), 
+                         ~as.numeric(gsub("…", "", .x)))))
+
+# final
 save(cleaned, file = "MapShanghai/data.rda")
 
