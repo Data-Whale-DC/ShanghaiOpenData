@@ -77,16 +77,23 @@ ui <- navbarPage(
     tags$title("上海区县地图")
   ),
 
-  # app first row
-  titlePanel(
-    fluidRow(
-      column(5, img(height = 100, src = "soda-datawhale.png")),
-      column(7, h4("使用说明：\n1. 选择数据表，点击确定\n2. 选择绘制区域热力图的参数，点击确定")),
-    ),
-  ),
+  
 
   tabPanel(
     "数据表",
+    
+    # app first row
+    titlePanel(
+        fluidRow(
+            column(5, img(height = 100, src = "soda-datawhale.png")),
+            column(7, HTML(
+                paste(
+                    h4("使用说明"),
+                    h4("1. 选择数据表，点击确定"),
+                    h4("2. 选择绘制区域热力图的参数，点击确定")
+                )))
+        ),
+    ),
 
 
     # app second row
@@ -99,7 +106,8 @@ ui <- navbarPage(
           choices = names(cleaned)
         ),
         actionButton("confirmdata", "确定"),
-        DT::dataTableOutput("data")
+        div(style = 'overflow-x: scroll', DT::dataTableOutput("data")),
+        width = 6
       ),
 
       # Main panel viz
@@ -108,7 +116,8 @@ ui <- navbarPage(
           choices = "请选择参数"
         ),
         actionButton("confirmcol", "确定"),
-        plotlyOutput("map")
+        plotlyOutput("map"),
+        width = 6
       )
     )
   ),
