@@ -37,67 +37,70 @@ create_map <- function(df, col) {
   map <- ggplot(data = df, aes_string(fill = col, text = "name")) +
     geom_sf() +
     ggthemes::theme_map() +
+    scale_fill_distiller(direction = 1)+
     theme(text = element_text(family = "Hei"))
 
   ggplotly(map)
 }
 
 show_plot <- function(type) {
-    indicators %>%
-        mutate(全市 = (地区 != "全市")) %>%
-        filter(类别 == type) %>%
-        mutate(地区 = reorder_within(地区, value, name)) %>%
-        ggplot(
-            aes(
-                x = 地区,
-                y = value,
-                fill = 类别,
-                color = 全市
-            )
-        ) +
-        geom_col() +
-        scale_x_reordered() +
-        scale_color_manual(values = c("#f1a340", "#f7f7f7")) +
-        scale_fill_manual(values = c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")) +
-        facet_wrap(~name, scales = "free") +
-        coord_flip() +
-        labs(x = "", y = "") +
-        theme_classic() +
-        theme(
-            text = element_text(family = "Hei"),
-            legend.position = "none"
-        )
+  indicators %>%
+    mutate(全市 = (地区 != "全市")) %>%
+    filter(类别 == type) %>%
+    mutate(地区 = reorder_within(地区, value, name)) %>%
+    ggplot(
+      aes(
+        x = 地区,
+        y = value,
+        fill = 年份,
+        color = 全市
+      )
+    ) +
+    geom_col(position = "dodge") +
+    scale_x_reordered() +
+    scale_color_manual(values = c("#f1a340", "#f7f7f7")) +
+    scale_fill_manual(values = c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")) +
+    facet_wrap(~name, scales = "free") +
+    coord_flip() +
+    guides(color = F)+
+    labs(x = "", y = "") +
+    theme_classic() +
+    theme(
+      text = element_text(family = "SimHei")
+    )
 }
+
 # Define UI for application that draws a histogram
 ui <- navbarPage(
   theme = shinytheme("cerulean"),
 
   # app windows title
   tags$head(
-    tags$title("上海区县地图")
+    tags$title("上海开放数据创新应用大赛-Data Whale复赛作品")
   ),
 
   
 
   tabPanel(
-    "数据表",
+    "上海各区县2017统计年鉴数据",
     
     # app first row
     titlePanel(
         fluidRow(
-            column(5, img(height = 100, src = "soda-datawhale.png")),
+            column(5, tags$a(img(src = "soda-datawhale.png", height = 100), 
+                             href = "https://data-whale.netlify.app/")),
             column(7, HTML(
                 paste(
-                    h4("使用说明"),
-                    h4("1. 选择数据表，点击确定"),
-                    h4("2. 选择绘制区域热力图的参数，点击确定")
+                    h4("欢迎使用上海各区县城市生活指标可视化追踪平台。"),
+                    h6("1. 请在页面左侧选择统计年鉴数据表，点击确定显示数据表。单击数据表的指标列即可按数值大小排序"),
+                    h6("2. 选定数据表后， 可在页面右侧选择绘制区域热力图的数据。鼠标移到地图上方即可获取具体数值、对地图进行局部放大、图片下载等操作")
                 )))
         ),
     ),
 
 
     # app second row
-    h2("上海区县地图"),
+    h2("上海各区县2017统计年鉴数据热力图"),
 
     # Sidebar
     sidebarLayout(
@@ -123,12 +126,27 @@ ui <- navbarPage(
   ),
 
   tabPanel(
-    "dashboard",
-    selectizeInput("var","请选择内容",
-                   choices = c("城市人口","居住环境","经济发展","教育卫生")),
-    mainPanel(
-      plotlyOutput("dashboard")
-    )
+    "上海各区县 2012-2017 城市生活指标追踪",
+    
+    sidebarLayout(
+      sidebarPanel(
+        h4("2012 与 2017 年指标比较"),
+        
+        radioButtons("var","请选择内容",
+                     choices = c("城市人口","居住环境","经济发展","教育卫生")),
+        
+        h5("数据来源："),
+        p("上海市统计局 上海统计年鉴"),
+        h5("指标注释："),
+        p("1. 医护人员包括执业医师和注册护士"),
+        p("2. 2012年生产力数据根据国家统计局公布的CPI指数调整为2017年价格"),
+        p("3. 商业用房包括工厂、仓库、办公建筑、商场店铺、医院、旅馆、影剧院等")
+      ),
+      
+      mainPanel(
+        plotlyOutput("dashboard")
+      )
+      )
   )
 )
 
@@ -171,7 +189,8 @@ server <- function(input, output, session) {
   })
   
   output$dashboard <- renderPlotly({
-      plotly::ggplotly(show_plot(input$var))
+      ggplotly(show_plot(input$var), tooltip = c("地区", "年份","value")) %>% 
+      hide_legend()
   })
 }
 
