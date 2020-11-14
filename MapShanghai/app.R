@@ -37,7 +37,7 @@ create_map <- function(df, col) {
   map <- ggplot(data = df, aes_string(fill = col, text = "name")) +
     geom_sf() +
     ggthemes::theme_map() +
-    scale_fill_distiller(direction = 1)+
+    scale_fill_distiller(direction = 1) +
     theme(text = element_text(family = "Hei"))
 
   ggplotly(map)
@@ -62,7 +62,7 @@ show_plot <- function(type) {
     scale_fill_manual(values = c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")) +
     facet_wrap(~name, scales = "free") +
     coord_flip() +
-    guides(color = F)+
+    guides(color = F) +
     labs(x = "", y = "") +
     theme_classic() +
     theme(
@@ -79,23 +79,25 @@ ui <- navbarPage(
     tags$title("上海开放数据创新应用大赛-Data Whale复赛作品")
   ),
 
-  
+
 
   tabPanel(
     "上海各区县2017统计年鉴数据",
-    
+
     # app first row
     titlePanel(
-        fluidRow(
-            column(5, tags$a(img(src = "soda-datawhale.png", height = 100), 
-                             href = "https://data-whale.netlify.app/")),
-            column(7, HTML(
-                paste(
-                    h4("欢迎使用上海各区县城市生活指标可视化追踪平台。"),
-                    h6("1. 请在页面左侧选择统计年鉴数据表，点击确定显示数据表。单击数据表的指标列即可按数值大小排序"),
-                    h6("2. 选定数据表后， 可在页面右侧选择绘制区域热力图的数据。鼠标移到地图上方即可获取具体数值、对地图进行局部放大、图片下载等操作")
-                )))
-        ),
+      fluidRow(
+        column(5, tags$a(img(src = "soda-datawhale.png", height = 100),
+          href = "https://data-whale.netlify.app/"
+        )),
+        column(7, HTML(
+          paste(
+            h4("欢迎使用上海各区县城市生活指标可视化追踪平台。"),
+            h6("1. 请在页面左侧选择统计年鉴数据表，点击确定显示数据表。单击数据表的指标列即可按数值大小排序"),
+            h6("2. 选定数据表后， 可在页面右侧选择绘制区域热力图的数据。鼠标移到地图上方即可获取具体数值、对地图进行局部放大、图片下载等操作")
+          )
+        ))
+      ),
     ),
 
 
@@ -108,8 +110,11 @@ ui <- navbarPage(
         selectizeInput("dataset", "选择数据表",
           choices = names(cleaned)
         ),
-        actionButton("confirmdata", "确定"),
-        div(style = 'overflow-x: scroll', DT::dataTableOutput("data")),
+        splitLayout(
+          actionButton("confirmdata", "确定"),
+          downloadButton("download", "下载数据")
+        ),
+        div(style = "overflow-x: scroll", DT::dataTableOutput("data")),
         width = 6
       ),
 
@@ -127,14 +132,15 @@ ui <- navbarPage(
 
   tabPanel(
     "上海各区县 2012-2017 城市生活指标追踪",
-    
+
     sidebarLayout(
       sidebarPanel(
         h4("2012 与 2017 年指标比较"),
-        
-        radioButtons("var","请选择内容",
-                     choices = c("城市人口","居住环境","经济发展","教育卫生")),
-        
+
+        radioButtons("var", "请选择内容",
+          choices = c("城市人口", "居住环境", "经济发展", "教育卫生")
+        ),
+
         h5("数据来源："),
         p("上海市统计局 上海统计年鉴"),
         h5("指标注释："),
@@ -142,11 +148,11 @@ ui <- navbarPage(
         p("2. 2012年生产力数据根据国家统计局公布的CPI指数调整为2017年价格"),
         p("3. 商业用房包括工厂、仓库、办公建筑、商场店铺、医院、旅馆、影剧院等")
       ),
-      
+
       mainPanel(
         plotlyOutput("dashboard")
       )
-      )
+    )
   )
 )
 
@@ -173,6 +179,15 @@ server <- function(input, output, session) {
       formatRound(columns = colnames(datatable)[-1], digits = 1)
   })
 
+  output$download <- downloadHandler(
+    filename = function() {
+      paste("SODA_", Sys.Date(), ".csv")
+    },
+    content = function(filename) {
+      write.csv(setup(), filename)
+    }
+  )
+
   output$map <- renderPlotly({
     map <- setup() %>%
       rename(name = 地区)
@@ -187,13 +202,12 @@ server <- function(input, output, session) {
 
     create_map(map_data, col())
   })
-  
+
   output$dashboard <- renderPlotly({
-      ggplotly(show_plot(input$var), tooltip = c("地区", "年份","value")) %>% 
+    ggplotly(show_plot(input$var), tooltip = c("地区", "年份", "value")) %>%
       hide_legend()
   })
 }
 
 # Run the application
 shinyApp(ui = ui, server = server)
-
